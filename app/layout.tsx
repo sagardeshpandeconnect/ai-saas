@@ -32,15 +32,7 @@ export default function RootLayout({
   return (
     <ClerkProvider afterSignOutUrl={"/"}>
       <html lang="en">
-        <body>
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-          {children}
-        </body>
+        <body>{children}</body>
       </html>
     </ClerkProvider>
   );
