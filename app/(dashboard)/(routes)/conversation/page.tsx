@@ -1,7 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { ChatCompletionMessage } from "openai/resources/chat";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import axios from "axios";
 import { MessageSquare } from "lucide-react";
 import Heading from "@/components/heading";
 import { formSchema } from "./constants";
@@ -11,6 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const ConversationPage = () => {
+  const router = useRouter();
+
+  const [messages, setMessages] = useState<ChatCompletionMessage[]>([]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -22,6 +30,22 @@ const ConversationPage = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log(values);
+    try {
+      const userMessage = {
+        role: "user",
+        content: values.prompt,
+      } as const;
+      const newMessages = [...messages, userMessage];
+      const response = await axios.post("/api/conversation", {
+        messages: newMessages,
+      });
+      setMessages((current) => [...current, userMessage, response.data]);
+      form.reset();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      router.refresh();
+    }
   };
 
   return (
@@ -63,7 +87,13 @@ const ConversationPage = () => {
             </form>
           </Form>
         </div>
-        <div className="space-y-4 mt-4">Message Content</div>
+        <div className="space-y-4 mt-4">
+          <div className="flex flex-col-reverse gap-y-4">
+            {messages.map((message) => {
+              return <div key={message.content}>{message.content}</div>;
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
