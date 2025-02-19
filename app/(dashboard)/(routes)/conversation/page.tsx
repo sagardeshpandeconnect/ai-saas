@@ -13,6 +13,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import Empty from "@/components/empty";
+import Loader from "@/components/loader";
 
 const ConversationPage = () => {
   const router = useRouter();
@@ -29,7 +31,7 @@ const ConversationPage = () => {
   const isLoading = form.formState.isSubmitting;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+    console.log("Form submitted", values);
     try {
       const userMessage = {
         role: "user",
@@ -47,6 +49,7 @@ const ConversationPage = () => {
       router.refresh();
     }
   };
+  console.log(form.formState.errors); // Check for validation errors
 
   return (
     <div>
@@ -73,12 +76,14 @@ const ConversationPage = () => {
                         disabled={isLoading}
                         placeholder="How do i calculate the radius of circle"
                         className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
+                        {...field}
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
               <Button
+                type="submit"
                 className="col-span-12 lg:col-span-2 w-full "
                 disabled={isLoading}
               >
@@ -88,6 +93,16 @@ const ConversationPage = () => {
           </Form>
         </div>
         <div className="space-y-4 mt-4">
+          {isLoading && (
+            <div className="p-8 rounded-lg w-full flex items-center justify-center bg-muted">
+              <Loader />
+            </div>
+          )}
+          {messages.length == 0 && !isLoading && (
+            <div>
+              <Empty label="No Conversation found" />
+            </div>
+          )}
           <div className="flex flex-col-reverse gap-y-4">
             {messages.map((message) => {
               return <div key={message.content}>{message.content}</div>;
