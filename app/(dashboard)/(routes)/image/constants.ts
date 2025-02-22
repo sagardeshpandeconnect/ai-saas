@@ -28,7 +28,7 @@ export const amountOptions = [
     label: "5 Photo",
   },
 ];
-export const requiredOptions = [
+export const resolutionOptions = [
   {
     value: "256x256",
     label: "256x256",
