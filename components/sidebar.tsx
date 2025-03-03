@@ -61,6 +61,7 @@ const routes = [
   },
 ];
 
+// bg-[#111827]
 const Sidebar = () => {
   const pathname = usePathname();
   return (

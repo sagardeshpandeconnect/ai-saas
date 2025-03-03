@@ -6,8 +6,9 @@ import {
   SheetContent,
   SheetTrigger,
   SheetTitle,
+  SheetClose,
 } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react"; // Import the X icon
 import Sidebar from "@/components/sidebar";
 
 const MobileSidebar = () => {
@@ -15,6 +16,7 @@ const MobileSidebar = () => {
   useEffect(() => setIsMounted(true), []);
 
   if (!isMounted) return null;
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -28,6 +30,13 @@ const MobileSidebar = () => {
       </SheetTrigger>
       <SheetContent side="left" className="p-0" aria-label="Navigation">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+
+        {/* Custom close button */}
+        <SheetClose className="bg-white absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+          <X className="h-6 w-6" />
+          <span className="sr-only">Close</span>
+        </SheetClose>
+
         <Sidebar />
       </SheetContent>
     </Sheet>
