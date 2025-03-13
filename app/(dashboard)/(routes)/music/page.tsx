@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -18,7 +18,8 @@ import { MusicIcon } from "lucide-react";
 const MusicPage = () => {
   const router = useRouter();
 
-  const [music, setMusic] = useState<string>();
+  const [audioUrl, setAudioUrl] = useState<string>();
+  const [spectrogramUrl, setSpectrogramUrl] = useState<string>();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -29,24 +30,87 @@ const MusicPage = () => {
 
   const isLoading = form.formState.isSubmitting;
 
+  // Cleanup function to release object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioUrl && audioUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      if (spectrogramUrl && spectrogramUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(spectrogramUrl);
+      }
+    };
+  }, [audioUrl, spectrogramUrl]);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log("Form submitted", values);
     try {
-      setMusic(undefined);
+      // Reset current media
+      if (audioUrl && audioUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      if (spectrogramUrl && spectrogramUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(spectrogramUrl);
+      }
+
+      setAudioUrl(undefined);
+      setSpectrogramUrl(undefined);
 
       const response = await axios.post("/api/music", values);
-      console.log(response.data);
+      console.log("API Response:", response.data);
 
-      setMusic(response.data.audio);
+      // Handle the response based on the format
+      if (response.data.audio?.base64) {
+        // We got the processed response with base64
+        const audioBlob = base64ToBlob(
+          response.data.audio.base64,
+          response.data.audio.contentType || "audio/wav"
+        );
+        const newAudioUrl = URL.createObjectURL(audioBlob);
+        setAudioUrl(newAudioUrl);
+
+        // Handle spectrogram if available
+        if (response.data.spectrogram?.base64) {
+          const imageUrl = `data:${
+            response.data.spectrogram.contentType || "image/png"
+          };base64,${response.data.spectrogram.base64}`;
+          setSpectrogramUrl(imageUrl);
+        }
+      } else if (response.data.audio instanceof ReadableStream) {
+        // Handle legacy response format (direct stream)
+        console.log("Got ReadableStream, converting...");
+      } else {
+        // Handle other response formats (e.g., direct URL)
+        setAudioUrl(response.data.audio);
+      }
 
       form.reset();
     } catch (error) {
-      console.log(error);
+      console.log("Error generating music:", error);
     } finally {
       router.refresh();
     }
   };
-  console.log(form.formState.errors); // Check for validation errors
+
+  // Helper function to convert base64 to Blob
+  const base64ToBlob = (base64: string, contentType: string) => {
+    const byteCharacters = atob(base64);
+    const byteArrays = [];
+
+    for (let i = 0; i < byteCharacters.length; i += 512) {
+      const slice = byteCharacters.slice(i, i + 512);
+      const byteNumbers = new Array(slice.length);
+
+      for (let j = 0; j < slice.length; j++) {
+        byteNumbers[j] = slice.charCodeAt(j);
+      }
+
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+
+    return new Blob(byteArrays, { type: contentType });
+  };
 
   return (
     <div>
@@ -81,7 +145,7 @@ const MusicPage = () => {
               />
               <Button
                 type="submit"
-                className="col-span-12 lg:col-span-2 w-full "
+                className="col-span-12 lg:col-span-2 w-full"
                 disabled={isLoading}
               >
                 Generate
@@ -95,11 +159,29 @@ const MusicPage = () => {
               <Loader />
             </div>
           )}
-          {!music && !isLoading && <Empty label="No Music generated" />}
-          {music && (
-            <audio controls className="w-full mt-8">
-              <source src={music} />
-            </audio>
+          {!audioUrl && !isLoading && <Empty label="No Music generated" />}
+          {audioUrl && (
+            <div className="flex flex-col space-y-4">
+              <audio controls className="w-full mt-8">
+                <source src={audioUrl} />
+              </audio>
+
+              {spectrogramUrl && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-medium mb-2">
+                    Audio Spectrogram
+                  </h3>
+                  <div className="relative w-full h-48 bg-black/10 rounded-lg overflow-hidden">
+                    {/* Using next/image for the spectrogram */}
+                    <img
+                      src={spectrogramUrl}
+                      alt="Audio spectrogram"
+                      className="object-contain w-full h-full"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
