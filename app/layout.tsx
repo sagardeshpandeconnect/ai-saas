@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
+import { ModalProvider } from "@/components/modal-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +27,10 @@ export default function RootLayout({
   return (
     <ClerkProvider afterSignOutUrl={"/"}>
       <html lang="en">
-        <body>{children}</body>
+        <body>
+          <ModalProvider />
+          {children}
+        </body>
       </html>
     </ClerkProvider>
   );
