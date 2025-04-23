@@ -14,8 +14,10 @@ import { Button } from "@/components/ui/button";
 import Empty from "@/components/empty";
 import Loader from "@/components/loader";
 import { MusicIcon } from "lucide-react";
+import { useProModal } from "@/hooks/use-pro-modal";
 
 const MusicPage = () => {
+  const proModal = useProModal();
   const router = useRouter();
 
   const [audioUrl, setAudioUrl] = useState<string>();
@@ -85,7 +87,10 @@ const MusicPage = () => {
       }
 
       form.reset();
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.response?.status === 403) {
+        proModal.onOpen();
+      }
       console.log("Error generating music:", error);
     } finally {
       router.refresh();

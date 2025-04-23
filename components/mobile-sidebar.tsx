@@ -11,7 +11,11 @@ import {
 import { Menu, X } from "lucide-react"; // Import the X icon
 import Sidebar from "@/components/sidebar";
 
-const MobileSidebar = () => {
+interface MobileSidebarProps {
+  apiLimitCount: number;
+}
+
+const MobileSidebar = ({ apiLimitCount }: MobileSidebarProps) => {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => setIsMounted(true), []);
 
@@ -37,7 +41,7 @@ const MobileSidebar = () => {
           <span className="sr-only">Close</span>
         </SheetClose>
 
-        <Sidebar />
+        <Sidebar apiLimitCount={apiLimitCount} />
       </SheetContent>
     </Sheet>
   );
