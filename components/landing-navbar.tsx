@@ -21,6 +21,13 @@ const LandingNavbar = () => {
           Genius
         </h1>
       </Link>
+      <div className="flex items-center gap-4">
+        <Link href={isSignedIn ? "/dashboard" : "/sign-up"}>
+          <Button variant="outline" className="rounded-full">
+            Get Started
+          </Button>
+        </Link>
+      </div>
     </nav>
   );
 };
